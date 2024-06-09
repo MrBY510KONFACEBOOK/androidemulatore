@@ -1,9 +1,12 @@
 # Use Ubuntu as the base image
 FROM ubuntu:20.04
 
+# Set environment variable to prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    openjdk-8-jdk \
+    openjdk-11-jdk \
     wget \
     unzip \
     git \
@@ -23,17 +26,18 @@ RUN apt-get update && apt-get install -y \
     x11vnc \
     fluxbox \
     novnc \
-    websockify
+    websockify \
+    tzdata
 
-# Download and install Android SDK
-RUN wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip -O sdk-tools.zip && \
-    mkdir -p /opt/android-sdk/cmdline-tools && \
-    unzip sdk-tools.zip -d /opt/android-sdk/cmdline-tools && \
-    rm sdk-tools.zip
+# Download and install Android SDK command-line tools
+RUN mkdir -p /opt/android-sdk/cmdline-tools && \
+    wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /opt/android-sdk/cmdline-tools/tools.zip && \
+    unzip /opt/android-sdk/cmdline-tools/tools.zip -d /opt/android-sdk/cmdline-tools && \
+    rm /opt/android-sdk/cmdline-tools/tools.zip
 
 # Set environment variables
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
-ENV PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/tools/bin:$ANDROID_SDK_ROOT/platform-tools
+ENV PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools/bin:$ANDROID_SDK_ROOT/platform-tools
 
 # Accept licenses
 RUN yes | sdkmanager --licenses
@@ -46,7 +50,7 @@ RUN echo "no" | avdmanager create avd -n test -k "system-images;android-30;googl
 
 # Setup VNC server and noVNC
 RUN mkdir -p /root/.vnc && \
-    echo "password" | vncpasswd -f > /root/.vnc/passwd && \
+    echo "password" | x11vnc -storepasswd stdin /root/.vnc/passwd && \
     chmod 600 /root/.vnc/passwd
 
 # Copy startup script
