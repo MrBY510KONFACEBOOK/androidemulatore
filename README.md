@@ -1,0 +1,2 @@
+# androidemulatore
+nothing rellay
